@@ -68,40 +68,37 @@ with pyodbc.connect(
 
     # Names
     # En vous basant sur ce qui a été fait dans la section précédente, exportez les données de la table tNames
-    # A COMPLETER
 
-    try:
-        print("Indexing Film nodes...")
-        graph.run("CREATE INDEX ON :Film(idFilm)")
-        print("Indexing Name (Artist) nodes...")
-        graph.run("CREATE INDEX ON :Artist(idArtist)")
-    except Exception as error:
-        print(error)
-
-    # Relationships
+    # Names
     exportedCount = 0
-    cursor.execute("SELECT COUNT(1) FROM tJob")
+    cursor.execute("SELECT COUNT(1) FROM tArtist")
     totalCount = cursor.fetchval()
-    cursor.execute(f"SELECT idArtist, category, idFilm FROM tJob")
+    cursor.execute("SELECT idArtist, primaryName FROM tArtist")
     while True:
-        importData = {"acted in": [], "directed": [], "produced": [], "composed": []}
+        importData = []
         rows = cursor.fetchmany(BATCH_SIZE)
         if not rows:
             break
 
+        i = 0
         for row in rows:
-            relTuple = (row[0], {}, row[2])
-            importData[row[1]].append(relTuple)
+            # Créer un objet Node avec comme label Artist et les propriétés adéquates
+            n = Node("Artist", idArtist=row[0], primaryName=row[1])
+            importData.append(n)
+            i += 1
 
         try:
-            for cat in importData:
-                # Utilisez la fonction create_relationships de py2neo pour créer les relations entre les noeuds Film et Name
-                # (les tuples nécessaires ont déjà été créés ci-dessus dans la boucle for précédente)
-                # https://py2neo.org/2021.1/bulk/index.html
-                # ATTENTION: remplacez les espaces par des _ pour nommer les types de relation
-                # A COMPLETER
-                None  # Remplacez None par votre code
+            create_nodes(graph.auto(), importData, labels={"Artist"})
             exportedCount += len(rows)
-            print(f"{exportedCount}/{totalCount} relationships exported to Neo4j")
+            print(f"{exportedCount}/{totalCount} name records exported to Neo4j")
         except Exception as error:
             print(error)
+
+    try:
+        print("Indexing Film nodes...")
+        graph.run("CREATE INDEX FOR (f:Film) ON (f.idFilm)")
+        print("Indexing Name (Artist) nodes...")
+        graph.run("CREATE INDEX FOR (a:Artist) ON (a.idArtist)")
+    except Exception as error:
+        print(error)
+
