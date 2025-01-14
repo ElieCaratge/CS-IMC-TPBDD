@@ -102,3 +102,35 @@ with pyodbc.connect(
     except Exception as error:
         print(error)
 
+    # Relationships
+    exportedCount = 0
+    cursor.execute("SELECT COUNT(1) FROM tJob")
+    totalCount = cursor.fetchval()
+    cursor.execute(f"SELECT idArtist, category, idFilm FROM tJob")
+    while True:
+        importData = {"acted in": [], "directed": [], "produced": [], "composed": []}
+        rows = cursor.fetchmany(BATCH_SIZE)
+        if not rows:
+            break
+
+        for row in rows:
+            relTuple = (row[0], {}, row[2])
+            importData[row[1]].append(relTuple)
+
+        try:
+            for cat in importData:
+                # Utilisez la fonction create_relationships de py2neo pour créer les relations entre les noeuds Film et Name
+                # (les tuples nécessaires ont déjà été créés ci-dessus dans la boucle for précédente)
+                # https://py2neo.org/2021.1/bulk/index.html
+                # ATTENTION: remplacez les espaces par des _ pour nommer les types de relation
+                create_relationships(
+                    graph.auto(),
+                    data=importData[cat],
+                    rel_type=cat.replace(" ", "_"),
+                    start_node_key=("Artist", "idArtist"),
+                    end_node_key=("Film", "idFilm"),
+                )
+            exportedCount += len(rows)
+            print(f"{exportedCount}/{totalCount} relationships exported to Neo4j")
+        except Exception as error:
+            print(error)
