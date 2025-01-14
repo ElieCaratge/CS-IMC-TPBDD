@@ -526,17 +526,287 @@ RETURN prof1, prof2, f
 
 **Exercice 5** (½ pt): Affichez le noeud représentant l'actrice nommée `Nicole Kidman`, et visualisez son année de naissance.
 
+```cypher
+MATCH (a:Artist {primaryName: 'Nicole Kidman'})
+RETURN a.birthYear
+```
+
+```json
+[
+  {
+    "a.birthYear": 1967
+  }
+]
+```
+
 **Exercice 6** (½ pt): Visualisez l'ensemble des films.
+
+```cypher
+MATCH (f:Film)
+RETURN f
+```
 
 **Exercice 7** (½ pt): Trouvez les noms des artistes nés en `1963`, affichez ensuite leur nombre.
 
+```cypher
+MATCH (a:Artist {birthYear: 1963})
+RETURN a.primaryName
+```
+
+```json
+[
+  {
+    "a.primaryName": "Johnny Depp"
+  },
+  {
+    "a.primaryName": "William Baldwin"
+  },
+  {
+    "a.primaryName": "Lauren Holly"
+  },
+  {
+    "a.primaryName": "Dermot Mulroney"
+  },
+  {
+    "a.primaryName": "David Thewlis"
+  },
+  {
+    "a.primaryName": "Shirell Ferguson-Coleman"
+  },
+  {
+    "a.primaryName": "Ali Çatalbas"
+  },
+  {
+    "a.primaryName": "Roy Dupuis"
+  },
+...
+]
+```
+259 Records
+
 **Exercice 8** (1 pt): Trouver l'ensemble des acteurs (sans entrées doublons) qui ont joué dans plus d'un film.
+
+```cypher
+MATCH (a:Artist)-[:acted_in]->(f:Film)
+WITH a, COUNT(f) AS nbFilms
+WHERE nbFilms > 1
+RETURN DISTINCT a.primaryName, nbFilms
+ORDER BY nbFilms DESC
+```
+
+```json
+[
+  {
+    "a.primaryName": "Eric Roberts",
+    "nbFilms": 35
+  },
+  {
+    "a.primaryName": "Clinton Joshua Ezenele",
+    "nbFilms": 28
+  },
+  {
+    "a.primaryName": "Maurice Sam",
+    "nbFilms": 24
+  },
+  {
+    "a.primaryName": "Yogi Babu",
+    "nbFilms": 21
+  },
+  {
+    "a.primaryName": "Johny Antony",
+    "nbFilms": 19
+  },
+  {
+    "a.primaryName": "Ajay",
+    "nbFilms": 19
+  },
+  {
+    "a.primaryName": "Tanikella Bharani",
+    "nbFilms": 18
+  },
+  {
+    "a.primaryName": "M.S. Bhaskar",
+    "nbFilms": 16
+  },
+  {
+    "a.primaryName": "Jaffer Idukki",
+    "nbFilms": 16
+  },
+...
+]
+```
+9418 Records
 
 **Exercice 9** (1 pt): Trouvez les artistes ayant eu plusieurs responsabilités au cours de leur carrière (acteur, directeur, producteur...).
 
+```cypher
+MATCH (a:Artist)-[r]->(f:Film)
+WITH a, COLLECT(DISTINCT type(r)) AS roles
+WHERE SIZE(roles) > 1
+RETURN a.primaryName, roles
+ORDER BY SIZE(roles) DESC
+```
+
+```json
+[
+  {
+    "a.primaryName": "Justin L. Rhodes",
+    "roles": [
+      "acted_in",
+      "directed",
+      "produced",
+      "composed"
+    ]
+  },
+  {
+    "a.primaryName": "Jibri Wright",
+    "roles": [
+      "directed",
+      "produced",
+      "acted_in",
+      "composed"
+    ]
+  },
+  {
+    "a.primaryName": "Mart Sander",
+    "roles": [
+      "acted_in",
+      "directed",
+      "produced",
+      "composed"
+    ]
+  },
+  {
+    "a.primaryName": "Juha Lilja",
+    "roles": [
+      "acted_in",
+      "directed",
+      "produced",
+      "composed"
+    ]
+  },
+  {
+    "a.primaryName": "Talha Kemiksiz",
+    "roles": [
+      "acted_in",
+      "directed",
+      "produced",
+      "composed"
+    ]
+  },
+  {
+    "a.primaryName": "Ken Sechrist",
+    "roles": [
+      "acted_in",
+      "directed",
+      "produced",
+      "composed"
+    ]
+  },
+  {
+    "a.primaryName": "Pedro Alonso Pablos",
+    "roles": [
+      "acted_in",
+      "directed",
+      "produced",
+      "composed"
+    ]
+  },
+...
+]
+```
+6028 Records
+
 **Exercice 10** (1 pt): Montrez les artistes ayant eu plusieurs responsabilités dans un même film (ex: à la fois acteur et directeur, ou toute autre combinaison) et les titres de ces films.
 
+```cypher
+MATCH (a:Artist)-[r]->(f:Film)
+WITH a, f, COLLECT(DISTINCT type(r)) AS roles
+WHERE SIZE(roles) > 1
+RETURN a.primaryName, f.primaryTitle, roles
+ORDER BY SIZE(roles) DESC
+```
+
+```json
+[
+  {
+    "a.primaryName": "Justin L. Rhodes",
+    "f.primaryTitle": "King of Dallas",
+    "roles": [
+      "acted_in",
+      "directed",
+      "produced",
+      "composed"
+    ]
+  },
+  {
+    "a.primaryName": "Mart Sander",
+    "f.primaryTitle": "Dr. Sander's Sleep Cure",
+    "roles": [
+      "acted_in",
+      "directed",
+      "produced",
+      "composed"
+    ]
+  },
+  {
+    "a.primaryName": "Dennis Edwards",
+    "f.primaryTitle": "Pharism: Prologue",
+    "roles": [
+      "acted_in",
+      "directed",
+      "produced",
+      "composed"
+    ]
+  },
+  {
+    "a.primaryName": "Marcus Clark",
+    "f.primaryTitle": "Dangerous Link",
+    "roles": [
+      "acted_in",
+      "directed",
+      "produced",
+      "composed"
+    ]
+  },
+  {
+    "a.primaryName": "Avinash Dhyani",
+    "f.primaryTitle": "Phooli",
+    "roles": [
+      "acted_in",
+      "directed",
+      "produced",
+      "composed"
+    ]
+  },
+...
+]
+```
+6195 Records
+
 **Exercice 11** (2 pt): Trouver le nom du ou des film(s) ayant le plus d'acteurs.
+
+```cypher
+MATCH (a:Artist)-[:acted_in]->(f:Film)
+WITH f, COUNT(a) AS nbActors
+ORDER BY nbActors DESC
+LIMIT 1
+WITH nbActors AS maxActors
+
+MATCH (a:Artist)-[:acted_in]->(f:Film)
+WITH f, COUNT(a) AS nbActors, maxActors
+WHERE nbActors = maxActors
+RETURN f.primaryTitle, nbActors
+```
+
+```json
+[
+  {
+    "f.primaryTitle": "Watchmen: Chapter I",
+    "nbActors": 28
+  }
+]
+```
 
 ## Requêtes graphe (Gremlin)
 Une autre base de données graphe a été créée pour ce TP.  Elle utilise la technologie Cosmos DB, une base de donnée multi-paradigme sur Azure. Pour le paradigme graphe et contrairement à Cypher, Cosmos DB utilise un langage de requêtage open source: [Apache Gremlin](https://tinkerpop.apache.org/docs/3.3.2/reference/#graph-traversal-steps).
