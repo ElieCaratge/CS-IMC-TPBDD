@@ -392,13 +392,137 @@ Pour supprimer des noeuds, utilisez le statement `DELETE`.
 # Partie 4 - Requêtes graphe (Cypher)
 Ecrire les requêtes ci-dessous, et les expliquer en deux ou trois phrases maximum en français ou en anglais.
 
-**Exercice 1** (¼ pt): Ajoutez une personne ayant votre prénom et votre nom dans le graphe. Verifiez qui le noeud a bien éte crée. 
+**Exercice 1*` (¼ pt): Ajoutez une personne ayant votre prénom et votre nom dans le graphe. Verifiez qui le noeud a bien éte crée. 
+
+```cypher
+CREATE (p:Artist {primaryName: 'Elie Caratgé'})
+RETURN p
+```
+
+```json
+[
+  {
+    "p": {
+      "identity": 98079,
+      "labels": [
+        "Artist"
+      ],
+      "properties": {
+        "primaryName": "Elie Caratgé"
+      },
+      "elementId": "4:680585fe-1408-4dc4-a8b2-6f38aa3a667b:98079"
+    }
+  }
+]
+```
 
 **Exercice 2** (¼ pt): Ajoutez un film nommé `L'histoire de mon 20 au cours Infrastructure de donnees`
 
+```cypher
+CREATE (f:Film {primaryTitle: "L'histoire de mon 20 au cours Infrastructure de donnees"})
+RETURN f
+```
+
+```json
+[
+  {
+    "f": {
+      "identity": 98080,
+      "labels": [
+        "Film"
+      ],
+      "properties": {
+        "primaryTitle": "L'histoire de mon 20 au cours Infrastructure de donnees"
+      },
+      "elementId": "4:680585fe-1408-4dc4-a8b2-6f38aa3a667b:98080"
+    }
+  }
+]
+```
+
 **Exercice 3** (½ pt): Ajoutez la relation `ACTED_IN` qui modélise votre participation à ce film en tant qu'acteur/actrice
 
+```cypher
+MATCH (p:Artist {primaryName: 'Elie Caratgé'}) OPTIONAL MATCH (f:Film {primaryTitle: "L'histoire de mon 20 au cours Infrastructure de donnees"})
+CREATE (p)-[:acted_in]->(f)
+RETURN p, f
+```
+
+```json
+[
+  {
+    "p": {
+      "identity": 98079,
+      "labels": [
+        "Artist"
+      ],
+      "properties": {
+        "primaryName": "Elie Caratgé"
+      },
+      "elementId": "4:680585fe-1408-4dc4-a8b2-6f38aa3a667b:98079"
+    },
+    "f": {
+      "identity": 98080,
+      "labels": [
+        "Film"
+      ],
+      "properties": {
+        "primaryTitle": "L'histoire de mon 20 au cours Infrastructure de donnees"
+      },
+      "elementId": "4:680585fe-1408-4dc4-a8b2-6f38aa3a667b:98080"
+    }
+  }
+]
+```
+
 **Exercice 4** (½ pt): Ajoutez deux de vos professeurs/enseignants comme réalisateurs/réalisatrices de ce film.
+
+```cypher
+CREATE (prof1:Artist {primaryName: 'Luc Vo Van'})
+CREATE (prof2:Artist {primaryName: 'Thierry Rapatout'})
+WITH prof1, prof2
+MATCH (f:Film {primaryTitle: "L'histoire de mon 20 au cours Infrastructure de donnees"})
+CREATE (prof1)-[:directed]->(f)
+CREATE (prof2)-[:directed]->(f)
+RETURN prof1, prof2, f
+```
+
+```json
+    [
+  {
+    "prof1": {
+      "identity": 98081,
+      "labels": [
+        "Artist"
+      ],
+      "properties": {
+        "primaryName": "Luc Vo Van"
+      },
+      "elementId": "4:680585fe-1408-4dc4-a8b2-6f38aa3a667b:98081"
+    },
+    "prof2": {
+      "identity": 98082,
+      "labels": [
+        "Artist"
+      ],
+      "properties": {
+        "primaryName": "Thierry Rapatout"
+      },
+      "elementId": "4:680585fe-1408-4dc4-a8b2-6f38aa3a667b:98082"
+    },
+    "f": {
+      "identity": 98080,
+      "labels": [
+        "Film"
+      ],
+      "properties": {
+        "primaryTitle": "L'histoire de mon 20 au cours Infrastructure de donnees"
+      },
+      "elementId": "4:680585fe-1408-4dc4-a8b2-6f38aa3a667b:98080"
+    }
+  }
+]
+````
 
 **Exercice 5** (½ pt): Affichez le noeud représentant l'actrice nommée `Nicole Kidman`, et visualisez son année de naissance.
 
