@@ -78,21 +78,224 @@ Ecrire les requêtes ci-dessous, et les expliquer en deux ou trois phrases maxim
 
 **Exercice 0**: Décrivez les tables et les attributs.
 
-**Exercice 1** (¼ pt): Visualisez l'année de naissance de l'artiste `Brad Pitt`.
+Pour décrire une table et ses attributs, on peut utiliser la commande `EXEC sp_help <Table>;`.
 
-**Exercice 2** (¼ pt): Comptez le nombre d'artistes présents dans la base de donnee. 
+Les tables sont les suivantes : 
+
+|Name      |Ower|Object type|
+|----------|----|-----------|
+|tArtist   |dbo |user_table |
+|tFilm     |dbo |user_table |
+|tFilmGenre|dbo |user_table |
+|tGenre    |dbo |user_table |
+|tJob      |dbo |user_table |
+
+Par exemple, la table `tArtist`possède les attributs suivants : 
+
+| Column_name | Type | Computed | Length | Prec | Scale | Nullable | TrimTrailingBlanks | FixedLenNullInSource | Collation |
+|-------------------|-----------------|------|----------|-----------|---------|--------------|-------------------|-------------|-----------|
+| idArtist          | nvarchar        | no   | 20       |           |         | no           | (n/a)             | (n/a)       | SQL_Latin1_General_CP1_CI_AS |
+| primaryName       | nvarchar        | no   | -1       |           |         | no           | (n/a)             | (n/a)       | SQL_Latin1_General_CP1_CI_AS |
+| birthYear         | smallint        | no   | 2        | 5         | 0       | yes          | (n/a)             | (n/a)       | NULL |
+
+**Exercice 1** (¼ pt): Visualisez l'année de naissance de l'artiste ~~Brad Pitt~~ `Gillian Anderson`.
+
+`SELECT birthYear FROM tArtist WHERE primaryName='Gillian Anderson';`
+
+|birthYear|
+|---|
+|1968|
+
+**Exercice 2** (¼ pt): Comptez le nombre d'artistes présents dans la base de donnee.
+
+`SELECT COUNT(*) FROM tArtist`
+
+|(No column name)|
+|---|
+|84166|
 
 **Exercice 3** (¼ pt): Trouvez les noms des artistes nés en `1960`, affichez ensuite leur nombre.
 
+`SELECT primaryName FROM tArtist WHERE birthYear=1960;`
+
+|primaryName|
+|---|
+|Antonio Banderas|
+|David Duchovny|
+|Charlie|
+|Julianne Moore|
+|Jean-Claude Van Damme|
+|Scott Baio|
+|Atom Egoyan|
+|Hugh Grant|
+|Jennifer Grey|
+|John Leguizamo|
+|Sean Penn|
+|Jean-Marc Barr|
+|Jason Beghe|
+...
+
+`SELECT COUNT(*) FROM tArtist WHERE birthYear=1960;`
+
+|(No column name)|
+|---|
+|211|
+
+
 **Exercice 4** (1 pt): Trouvez l'année de naissance la plus représentée parmi les acteurs (sauf 0!), et combien d'acteurs sont nés cette année là.
+
+```sql
+SELECT TOP 1 birthYear, COUNT(*) as nombre_acteurs
+FROM tArtist
+WHERE birthYear != 0
+GROUP BY birthYear
+ORDER BY nombre_acteurs DESC;
+```
+
+|birthYear|nombre_acteurs|
+|---|---|
+|1982|459|
 
 **Exercice 5** (½ pt): Trouvez les artistes ayant joué dans plus d'un film
 
+```sql
+SELECT tArtist.idArtist, tArtist.primaryName, COUNT(DISTINCT idFilm) AS nbFilms
+FROM tArtist
+JOIN tJob ON tArtist.idArtist = tJob.idArtist
+WHERE category = 'acted in'
+GROUP BY tArtist.idArtist, tArtist.primaryName
+HAVING COUNT(DISTINCT idFilm) > 1
+ORDER BY nbFilms DESC;
+```
+
+|idArtist|primaryName|nbFilms|
+|---|---|---|
+|nm0000616|Eric Roberts|35|
+|nm16290744|Clinton Joshua Ezenele|28|
+|nm8497257|Maurice Sam|24|
+|nm6489058|Yogi Babu|21|
+|nm1434372|Johny Antony|19|
+|nm0080238|Tanikella Bharani|18|
+|nm2496992|Ajay|17|
+|nm2132667|M.S. Bhaskar|16|
+|nm3154399|Jaffer Idukki|16|
+|nm8673980|Bimbo Ademoye|16|
+|nm9690656|Chris Akwarandu|16|
+|nm9711972|Uche Montana|15|
+|nm7636503|Chinenye Nnebe|15|
+...
+
 **Exercice 6** (½ pt): Trouvez les artistes ayant eu plusieurs responsabilités au cours de leur carrière (acteur, directeur, producteur...).
+
+```sql
+SELECT a.idArtist, COUNT(DISTINCT j.category) as nbResponsabilities
+FROM tJob j join tArtist a on j.idArtist = a.idArtist
+GROUP BY a.idArtist
+HAVING COUNT(DISTINCT j.category) > 1;
+```
+
+|idArtist|primaryName|nbResponsabilities|
+|---|---|---|
+|nm0047063|Petter Baiestorf|4|
+|nm0244864|Anjan Dutt|4|
+|nm0362026|Tyler Hard|4|
+|nm0498271|Sook-Yin Lee|4|
+|nm0761415|Mart Sander|4|
+|nm0772299|Eban Schletter|4|
+|nm0863011|Robert Tiffe|4|
+|nm0873940|Eric Troyer|4|
+|nm0894812|Todd Verow|4|
+|nm0993783|Aaron Stielstra|4|
+|nm10001472|Nick Cotrufo|4|
+|nm10149778|Cameron Nucete|4|
+|nm10213630|Amit Bhadana|4|
+|nm10339780|Dennis Edwards|4|
+|nm1076340|Ciaron Davies|4|
+|nm10979204|Ten-Headed Skeleton|4|
+...
 
 **Exercice 7** (¾ pt): Trouver le nom du ou des film(s) ayant le plus d'acteurs (i.e. uniquement *acted in*).
 
+```sql
+WITH
+    tNbActors
+    AS
+    (
+        SELECT f.primaryTitle, COUNT(DISTINCT j.idArtist) AS nbActors
+        FROM tFilm f JOIN tJob j ON f.idFilm = j.idFilm
+        WHERE j.category = 'acted in'
+        GROUP BY f.idFilm, f.primaryTitle
+    )
+SELECT primaryTitle, nbActors
+FROM tNbActors
+WHERE nbActors = (SELECT MAX(nbActors)
+FROM tNbActors)
+ORDER BY primaryTitle;
+```
+
+|primaryTitle|nbActors|
+|---|---|
+|#AMFAD: All My Friends Are Dead|10|
+|#FamilyMan|10|
+|#Lifestories|10|
+|#OOTD: Outfit of the Designer|10|
+|(Iconic)|10|
+|(Pri)sons|10|
+|(Un)lucky Sisters|10|
+|&#191;Ahora Somos 3? S&#237;, Mi Amor|10|
+|&#191;Es el enemigo? La pel&#237;cula de Gila|10|
+|&#191;Qui&#233;n es qui&#233;n?|10|
+|&#191;Vienes o Voy?|10|
+|1 Imam 2 Makmum|10|
+|1 Million Followers|10|
+|1+1+1 Life, love, chaos|10|
+|10 Days of a Curious Man|10|
+|10 Pasimatymu|10|
+|10 Things about Sally|10|
+|10 Years A Dog|10|
+|10/31 Part 4|10|
+|11 Rebels|10|
+...
+5781 Rows
+
 **Exercice 8** (1 pt): Montrez les artistes ayant eu plusieurs responsabilités dans un même film (ex: à la fois acteur et directeur, ou toute autre combinaison) et les titres de ces films.
+
+```sql
+SELECT primaryName, primaryTitle, COUNT(DISTINCT category) AS nbCategory
+FROM tArtist
+JOIN tJob ON tArtist.idArtist = tJob.idArtist
+JOIN tFilm ON tJob.idFilm = tFilm.idFilm
+GROUP BY tArtist.idArtist, tArtist.primaryName, tFilm.idFilm, tFilm.primaryTitle
+HAVING COUNT(DISTINCT category) > 1;
+```
+
+|primaryName|primaryTitle|nbCategory|
+|---|---|---|
+|Paul Reiser|The Problem with People|2|
+|Ryan C Jaeger|The Lockdown|2|
+|Martin A. Walther|Pet Farm|2|
+|Mohanlal|Barroz: Guardian of Treasures|2|
+|Nick Frost|Get Away|2|
+|Alex Roe|Hazard|2|
+|Sosie Bacon|Hazard|2|
+|Jeffrey Schneider|The Accident|2|
+|Milos Bikovic|Isolation|2|
+|Mike Cuenca|In the Ditch|2|
+|Jordon Prince-Wright|Before Dawn|2|
+|Guruprasad|Ranganayaka|2|
+|Maria Tran|Echo 8|2|
+|Takashi Hara|Echo 8|3|
+|Ammar Lasani|The Window|2|
+|Kanza Zia|The Window|2|
+|Kailee McGuire|The Night of the Harvest|2|
+|Renato Barbieri|Servid&#227;o|2|
+|Old-Nick|Between Time and Space: E.S.T.|2|
+|Ignacio Oliva|El laberinto. La guerra secreta de Espa&#241;a|2|
+|Jake Moss|Hood Safari|2|
+|Ajay Devgn|Singham Again|2|
+|Rohit Shetty|Singham Again|2|
+...
+6195 Rows
 
 # Partie 2 - Base de données graphe - Neo4j
 Neo4j est une base de données graphe. Les données sont représentées par des nœuds, des relations entre les nœuds et des propriétés:
