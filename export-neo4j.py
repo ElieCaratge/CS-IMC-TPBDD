@@ -12,7 +12,7 @@ server = os.environ["TPBDD_SERVER"]
 database = os.environ["TPBDD_DB"]
 username = os.environ["TPBDD_USERNAME"]
 password = os.environ["TPBDD_PASSWORD"]
-driver= os.environ["ODBC_DRIVER"]
+driver = os.environ["ODBC_DRIVER"]
 
 neo4j_server = os.environ["TPBDD_NEO4J_SERVER"]
 neo4j_user = os.environ["TPBDD_NEO4J_USER"]
@@ -27,7 +27,18 @@ graph.run("MATCH ()-[r]->() DELETE r")
 graph.run("MATCH (n:Artist) DETACH DELETE n")
 graph.run("MATCH (n:Film) DETACH DELETE n")
 
-with pyodbc.connect('DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password) as conn:
+with pyodbc.connect(
+    "DRIVER="
+    + driver
+    + ";SERVER=tcp:"
+    + server
+    + ";PORT=1433;DATABASE="
+    + database
+    + ";UID="
+    + username
+    + ";PWD="
+    + password
+) as conn:
     cursor = conn.cursor()
 
     # Films
@@ -67,20 +78,19 @@ with pyodbc.connect('DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE=
     except Exception as error:
         print(error)
 
-
     # Relationships
     exportedCount = 0
     cursor.execute("SELECT COUNT(1) FROM tJob")
     totalCount = cursor.fetchval()
     cursor.execute(f"SELECT idArtist, category, idFilm FROM tJob")
     while True:
-        importData = { "acted in": [], "directed": [], "produced": [], "composed": [] }
+        importData = {"acted in": [], "directed": [], "produced": [], "composed": []}
         rows = cursor.fetchmany(BATCH_SIZE)
         if not rows:
             break
 
         for row in rows:
-            relTuple=(row[0], {}, row[2])
+            relTuple = (row[0], {}, row[2])
             importData[row[1]].append(relTuple)
 
         try:
@@ -90,7 +100,7 @@ with pyodbc.connect('DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE=
                 # https://py2neo.org/2021.1/bulk/index.html
                 # ATTENTION: remplacez les espaces par des _ pour nommer les types de relation
                 # A COMPLETER
-                None # Remplacez None par votre code
+                None  # Remplacez None par votre code
             exportedCount += len(rows)
             print(f"{exportedCount}/{totalCount} relationships exported to Neo4j")
         except Exception as error:
