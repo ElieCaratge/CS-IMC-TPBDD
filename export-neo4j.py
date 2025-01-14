@@ -55,7 +55,7 @@ with pyodbc.connect(
         i = 0
         for row in rows:
             # Créer un objet Node avec comme label Film et les propriétés adéquates
-            # A COMPLETER
+            n = Node("Film", idFilm=row[0], primaryTitle=row[1], startYear=row[2])
             importData.append(n)
             i += 1
 
